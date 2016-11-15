@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -17,11 +18,23 @@ type SpreadingCode struct {
 	Chips []int
 }
 
-// CountSignChanges returns the number of sign changes in the
+// Sequency returns the number of sign changes in the
 // spreading code. Useful for creating sequency-ordered Walsh
 // matrices.
-func (c *SpreadingCode) CountSignChanges() int {
-	return 0
+func (code *SpreadingCode) Sequency() int {
+	count := 0
+	chips := code.Chips
+	if len(chips) == 0 {
+		return 0
+	}
+
+	for i := 1; i < len(chips); i++ {
+		if chips[i] != chips[i-1] {
+			count++
+		}
+	}
+
+	return count
 }
 
 // WalshMatrix holds orthogonal spreading codes.
@@ -29,6 +42,18 @@ type WalshMatrix struct {
 	Rows []SpreadingCode
 }
 
+func (m WalshMatrix) Len() int {
+	return len(m.Rows)
+}
+func (m WalshMatrix) Swap(i, j int) {
+	m.Rows[i], m.Rows[j] = m.Rows[j], m.Rows[i]
+}
+func (m WalshMatrix) Less(i, j int) bool {
+	return m.Rows[i].Sequency() < m.Rows[j].Sequency()
+}
+
+// WalshMatrixFromFile reads a file containing a grid of positive and negative
+// numbers representing chips in a Walsh matrix of orthogonal spreading codes.
 func WalshMatrixFromFile(filename string) *WalshMatrix {
 	matrixFile, err := os.Open(filename)
 	matrix := WalshMatrix{}
@@ -96,6 +121,7 @@ func Rectangle(gc draw2d.GraphicContext, x1, y1, x2, y2 float64) {
 
 func main() {
 	matrix := WalshMatrixFromFile("walsh.txt")
+	sort.Sort(matrix)
 
 	logoSize := 128
 
@@ -104,7 +130,7 @@ func main() {
 	gc := draw2dimg.NewGraphicContext(dest)
 
 	// Prepare the canvas.
-	// gc.SetLineWidth(5)
+	gc.SetLineWidth(0)
 
 	matrixSize := len(matrix.Rows)
 	cellPixSize := float64(logoSize / matrixSize)
@@ -114,7 +140,7 @@ func main() {
 			if col < 0 {
 				gc.SetFillColor(color.RGBA{0x44, 0xff, 0x44, 0xff})
 			} else {
-				gc.SetFillColor(color.RGBA{0xff, 0x00, 0x44, 0xff})
+				gc.SetFillColor(color.RGBA{0xff, 0x00, 0x44, 0x00})
 			}
 			Rectangle(gc,
 				float64(i)*cellPixSize,
