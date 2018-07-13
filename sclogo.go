@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"image"
 	"image/color"
-	"image/png"
 	"log"
 	"os"
 	"sort"
@@ -43,12 +42,17 @@ type WalshMatrix struct {
 	Rows []SpreadingCode
 }
 
+// Len returns the number of rows in the Walsh matrix; part of sort.Interface impl
 func (m WalshMatrix) Len() int {
 	return len(m.Rows)
 }
+
+// Swap swaps two rows in the Walsh matrix; part of sort.Interface impl
 func (m WalshMatrix) Swap(i, j int) {
 	m.Rows[i], m.Rows[j] = m.Rows[j], m.Rows[i]
 }
+
+// Less is part of the WalshMatrix sort.Interface impl
 func (m WalshMatrix) Less(i, j int) bool {
 	return m.Rows[i].Sequency() < m.Rows[j].Sequency()
 }
@@ -151,7 +155,7 @@ func main() {
 		}
 	}
 
-	draw2dimg.SaveToPngFile("logo1.png", dest)
+	draw2dimg.SaveToPngFile("logo.png", dest)
 
 	var img = NewImage()
 	var col color.Color
@@ -160,12 +164,4 @@ func main() {
 	img.HLine(10, 20, 80, col)
 	col = color.RGBA{0, 255, 0, 255} // Green
 	img.Rect(10, 10, 80, 50, col)
-
-	f, err := os.Create("logo.png")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	png.Encode(f, img.RGBA)
 }
